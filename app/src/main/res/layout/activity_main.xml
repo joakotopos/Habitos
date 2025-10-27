@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -35,40 +36,18 @@
             style="@style/Widget.AppCompat.Button.Borderless"/>
     </RelativeLayout>
 
-    <!-- Lista de tareas -->
-    <ListView
-        android:id="@+id/lvTasks"
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_below="@id/header"
-        android:layout_above="@id/addTaskLayout"
-        tools:listitem="@layout/list_item_task" />
+        android:layout_above="@+id/bottom_navigation" />
 
-    <!-- Layout para agregar nuevas tareas -->
-    <LinearLayout
-        android:id="@+id/addTaskLayout"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:elevation="4dp"
-        android:background="?attr/colorSurface">
-
-        <EditText
-            android:id="@+id/etNewTask"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Escribe una nueva tarea"
-            android:inputType="textCapSentences"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/btnAddTask"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Añadir"/>
-    </LinearLayout>
+        app:menu="@menu/bottom_nav_menu" />
 
 </RelativeLayout>

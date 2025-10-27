@@ -10,20 +10,13 @@ import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.TextView
 
-/**
- * Esta es la interfaz que MainActivity implementará para
- * que podamos "llamar" a la Activity desde el Adapter.
- */
+
 interface TaskCallbacks {
     fun onTaskChanged()
     fun onTaskDeleted(task: Task)
 }
 
-/**
- * El Adapter ahora usa un constructor primario de Kotlin.
- * Pasamos 'context', 'taskList', y 'callbacks' como propiedades.
- * Heredamos de ArrayAdapter<Task> y le pasamos los parámetros requeridos.
- */
+
 class TaskAdapter(
     context: Context,
     private val taskList: ArrayList<Task>,

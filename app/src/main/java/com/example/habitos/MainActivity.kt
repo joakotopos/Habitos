@@ -3,32 +3,25 @@ package com.example.habitos
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
-import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import java.util.HashSet
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
-// Implementamos la interfaz TaskCallbacks
-class MainActivity : AppCompatActivity(), TaskCallbacks {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var tvWelcome: TextView
     private lateinit var btnLogout: Button
-    private lateinit var lvTasks: ListView
-    private lateinit var etNewTask: EditText
-    private lateinit var btnAddTask: Button
+    private lateinit var bottomNav: BottomNavigationView
 
-    // Inicializamos la lista aquí
-    private var taskList = ArrayList<Task>()
-    private lateinit var adapter: TaskAdapter
-
-    // 'currentUsername' puede ser nulo inicialmente
     private var currentUsername: String? = null
     private lateinit var sessionPrefs: SharedPreferences
-    private lateinit var taskPrefs: SharedPreferences // SharedPreferences específico del usuario
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,111 +39,79 @@ class MainActivity : AppCompatActivity(), TaskCallbacks {
             return
         }
 
-        // 3. ¡LA CLAVE! Abrimos el SharedPreferences de tareas
-        // Usamos !! (operador de aserción no nula) porque ya comprobamos que no es nulo.
-        taskPrefs = getSharedPreferences("tasks_${currentUsername!!}", MODE_PRIVATE)
-
-        // 4. Inicializar vistas
+        // 3. Inicializar vistas
         tvWelcome = findViewById(R.id.tvWelcome)
         btnLogout = findViewById(R.id.btnLogout)
-        lvTasks = findViewById(R.id.lvTasks)
-        etNewTask = findViewById(R.id.etNewTask)
-        btnAddTask = findViewById(R.id.btnAddTask)
+        bottomNav = findViewById(R.id.bottom_navigation)
 
         // Plantilla de String
         tvWelcome.text = "Tareas de $currentUsername"
 
-        // 5. Inicializar la lista y el adaptador
-        // Pasamos "this" como el TaskCallbacks
-        adapter = TaskAdapter(this, taskList, this)
-        lvTasks.adapter = adapter
-
-        // 6. Cargar tareas guardadas
-        loadTasks()
-
-        // 7. Configurar Listeners
+        // 4. Configurar Listeners
         btnLogout.setOnClickListener { logout() }
-        btnAddTask.setOnClickListener { addTask() }
-    }
+        bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-    private fun addTask() {
-        val taskContent = etNewTask.text.toString().trim()
-        if (taskContent.isEmpty()) {
-            Toast.makeText(this, "Escribe una tarea", Toast.LENGTH_SHORT).show()
-            return
+        // 5. Cargar el fragmento inicial (Diarias)
+        if (savedInstanceState == null) {
+            val dailyFragment = DailyTasksFragment.newInstance(currentUsername!!)
+            loadFragment(dailyFragment)
         }
-
-        // Creamos un ID único
-        val id = System.currentTimeMillis().toString()
-        val newTask = Task(id, taskContent, false)
-
-        taskList.add(newTask)
-        adapter.notifyDataSetChanged() // Avisa al adapter
-        etNewTask.setText("") // Limpia el EditText
-
-        saveTasks() // Guardamos la lista actualizada
     }
 
-    private fun loadTasks() {
-        taskList.clear()
+    private val navListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
+        var selectedFragment: Fragment? = null
 
-        // getStringSet() puede devolver null. Usamos ?: para dar un HashSet vacío
-        // si es nulo.
-        val taskSet = taskPrefs.getStringSet("tasks", HashSet<String>()) ?: HashSet<String>()
-
-        // Iteramos sobre el Set con un forEach
-        taskSet.forEach { taskString ->
-            val parts = taskString.split("::")
-            if (parts.size == 3) {
-                val task = Task(
-                    parts[0], // id
-                    parts[1], // content
-                    parts[2].toBoolean() // isComplete
-                )
-                taskList.add(task)
+        when (item.itemId) {
+            R.id.navigation_daily -> {
+                selectedFragment = DailyTasksFragment.newInstance(currentUsername!!)
+            }
+            R.id.navigation_weekly -> {
+                // TODO: Crear y usar WeeklyTasksFragment
+                selectedFragment = PlaceholderFragment.newInstance("Semanales")
+            }
+            R.id.navigation_monthly -> {
+                // TODO: Crear y usar MonthlyTasksFragment
+                selectedFragment = PlaceholderFragment.newInstance("Mensuales")
             }
         }
-        adapter.notifyDataSetChanged()
+
+        if (selectedFragment != null) {
+            loadFragment(selectedFragment)
+            return@OnNavigationItemSelectedListener true
+        }
+        false
     }
 
-    private fun saveTasks() {
-        // Creamos el Set a guardar
-        val taskSet = HashSet<String>()
-
-        // Convertimos nuestra List<Task> al formato String
-        taskList.forEach { task ->
-            // Plantillas de String
-            taskSet.add("${task.id}::${task.content}::${task.isComplete}")
-        }
-
-        // Usamos la extensión KTX para guardar
-        taskPrefs.edit {
-            putStringSet("tasks", taskSet)
-        }
+    private fun loadFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
     }
 
     private fun logout() {
-        // Borramos la sesión
-        sessionPrefs.edit {
-            remove("CURRENT_USER")
-        }
-
-        // Volvemos al Login
+        sessionPrefs.edit { remove("CURRENT_USER") }
         startActivity(Intent(this, LoginActivity::class.java))
-        finish() // Cerramos MainActivity
+        finish()
+    }
+}
+
+// Fragmento temporal para las otras secciones
+class PlaceholderFragment : Fragment() {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val view = TextView(context)
+        view.text = "Tareas ${arguments?.getString("SECTION_NAME")}"
+        view.textSize = 24f
+        view.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        return view
     }
 
-    // --- Métodos de la interfaz TaskCallbacks ---
-
-    // 'override' es obligatorio
-    override fun onTaskChanged() {
-        saveTasks()
-    }
-
-    override fun onTaskDeleted(task: Task) {
-        taskList.remove(task)
-        adapter.notifyDataSetChanged()
-        saveTasks()
-        Toast.makeText(this, "Tarea eliminada", Toast.LENGTH_SHORT).show()
+    companion object {
+        fun newInstance(sectionName: String): PlaceholderFragment {
+            val fragment = PlaceholderFragment()
+            val args = Bundle()
+            args.putString("SECTION_NAME", sectionName)
+            fragment.arguments = args
+            return fragment
+        }
     }
 }
