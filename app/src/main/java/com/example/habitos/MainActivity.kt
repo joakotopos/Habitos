@@ -65,9 +65,6 @@ class MainActivity : AppCompatActivity() {
             R.id.navigation_weekly -> {
                 selectedFragment = WeeklyTasksFragment.newInstance(currentUsername!!)
             }
-            R.id.navigation_monthly -> {
-                selectedFragment = MonthlyTasksFragment.newInstance(currentUsername!!)
-            }
         }
 
         if (selectedFragment != null) {
