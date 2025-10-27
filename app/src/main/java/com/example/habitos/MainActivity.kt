@@ -62,6 +62,9 @@ class MainActivity : AppCompatActivity() {
             R.id.navigation_daily -> {
                 selectedFragment = DailyTasksFragment.newInstance(currentUsername!!)
             }
+            R.id.navigation_create -> {
+                selectedFragment = CreateTaskFragment()
+            }
             R.id.navigation_weekly -> {
                 selectedFragment = WeeklyTasksFragment.newInstance(currentUsername!!)
             }

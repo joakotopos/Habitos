@@ -6,8 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import androidx.core.content.edit
@@ -17,8 +15,6 @@ import java.util.HashSet
 class WeeklyTasksFragment : Fragment(), TaskCallbacks {
 
     private lateinit var lvTasks: ListView
-    private lateinit var etNewTask: EditText
-    private lateinit var btnAddTask: Button
 
     private var taskList = ArrayList<Task>()
     private lateinit var adapter: TaskAdapter
@@ -49,33 +45,12 @@ class WeeklyTasksFragment : Fragment(), TaskCallbacks {
 
         // Inicializar vistas
         lvTasks = view.findViewById(R.id.lvTasks)
-        etNewTask = view.findViewById(R.id.etNewTask)
-        btnAddTask = view.findViewById(R.id.btnAddTask)
 
         // Inicializar adaptador
         adapter = TaskAdapter(requireContext(), taskList, this)
         lvTasks.adapter = adapter
 
         loadTasks()
-
-        btnAddTask.setOnClickListener { addTask() }
-    }
-
-    private fun addTask() {
-        val taskContent = etNewTask.text.toString().trim()
-        if (taskContent.isEmpty()) {
-            Toast.makeText(requireContext(), "Escribe una tarea", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val id = System.currentTimeMillis().toString()
-        val newTask = Task(id, taskContent, false)
-
-        taskList.add(newTask)
-        adapter.notifyDataSetChanged()
-        etNewTask.setText("")
-
-        saveTasks()
     }
 
     private fun loadTasks() {
