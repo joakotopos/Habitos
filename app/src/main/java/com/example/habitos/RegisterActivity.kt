@@ -1,9 +1,11 @@
 package com.example.habitos
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -15,6 +17,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var etConfirmPassword: EditText
     private lateinit var btnRegister: Button
+    private lateinit var tvGoToLogin: TextView
 
     private lateinit var userPrefs: SharedPreferences
 
@@ -27,6 +30,7 @@ class RegisterActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etRegisterPassword)
         etConfirmPassword = findViewById(R.id.etRegisterConfirmPassword)
         btnRegister = findViewById(R.id.btnRegister)
+        tvGoToLogin = findViewById(R.id.tvGoToLogin)
 
         // 2. Inicializar SharedPreferences
         userPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
@@ -34,6 +38,12 @@ class RegisterActivity : AppCompatActivity() {
         // 3. Configurar listener (lambda)
         btnRegister.setOnClickListener {
             registerUser()
+        }
+
+        tvGoToLogin.setOnClickListener {
+            // Inicia LoginActivity
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
         }
     }
 
