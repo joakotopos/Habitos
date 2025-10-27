@@ -61,8 +61,14 @@ class TaskAdapter(
         cbTask.setOnCheckedChangeListener(null) // Evitar disparos accidentales
         cbTask.setOnCheckedChangeListener { _, isChecked ->
             currentTask.isComplete = isChecked
+            // Aplicamos el cambio visual directamente aquí
+            if (isChecked) {
+                tvTaskContent.paintFlags = tvTaskContent.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            } else {
+                tvTaskContent.paintFlags = tvTaskContent.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            }
+            // Guardamos el estado
             mCallbacks.onTaskChanged()
-            notifyDataSetChanged() // Actualizar la vista (tachado)
         }
 
         btnDelete.setOnClickListener {
