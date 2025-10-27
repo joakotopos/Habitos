@@ -3,9 +3,6 @@ package com.example.habitos
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -66,12 +63,10 @@ class MainActivity : AppCompatActivity() {
                 selectedFragment = DailyTasksFragment.newInstance(currentUsername!!)
             }
             R.id.navigation_weekly -> {
-                // TODO: Crear y usar WeeklyTasksFragment
-                selectedFragment = PlaceholderFragment.newInstance("Semanales")
+                selectedFragment = WeeklyTasksFragment.newInstance(currentUsername!!)
             }
             R.id.navigation_monthly -> {
-                // TODO: Crear y usar MonthlyTasksFragment
-                selectedFragment = PlaceholderFragment.newInstance("Mensuales")
+                selectedFragment = MonthlyTasksFragment.newInstance(currentUsername!!)
             }
         }
 
@@ -92,26 +87,5 @@ class MainActivity : AppCompatActivity() {
         sessionPrefs.edit { remove("CURRENT_USER") }
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
-    }
-}
-
-// Fragmento temporal para las otras secciones
-class PlaceholderFragment : Fragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = TextView(context)
-        view.text = "Tareas ${arguments?.getString("SECTION_NAME")}"
-        view.textSize = 24f
-        view.textAlignment = View.TEXT_ALIGNMENT_CENTER
-        return view
-    }
-
-    companion object {
-        fun newInstance(sectionName: String): PlaceholderFragment {
-            val fragment = PlaceholderFragment()
-            val args = Bundle()
-            args.putString("SECTION_NAME", sectionName)
-            fragment.arguments = args
-            return fragment
-        }
     }
 }
