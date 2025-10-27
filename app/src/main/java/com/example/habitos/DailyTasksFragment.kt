@@ -2,6 +2,7 @@ package com.example.habitos
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,10 +12,15 @@ import android.widget.Toast
 import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import java.util.HashSet
+import nl.dionsegijn.konfetti.xml.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
 
 class DailyTasksFragment : Fragment(), TaskCallbacks {
 
     private lateinit var lvTasks: ListView
+    private lateinit var konfettiView: KonfettiView
 
     private var taskList = ArrayList<Task>()
     private lateinit var adapter: TaskAdapter
@@ -47,6 +53,7 @@ class DailyTasksFragment : Fragment(), TaskCallbacks {
 
         // Inicializar vistas
         lvTasks = view.findViewById(R.id.lvTasks)
+        konfettiView = view.findViewById(R.id.konfettiView)
 
         // Inicializar adaptador
         adapter = TaskAdapter(requireContext(), taskList, this)
@@ -80,8 +87,24 @@ class DailyTasksFragment : Fragment(), TaskCallbacks {
         }
     }
 
+    private fun celebrate() {
+        val party = Party(
+            speed = 0f,
+            maxSpeed = 30f,
+            damping = 0.9f,
+            spread = 360,
+            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+            emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+            position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.3)
+        )
+        konfettiView.start(party)
+    }
+
     // --- Callbacks de la interfaz ---
-    override fun onTaskChanged() {
+    override fun onTaskChanged(task: Task, isComplete: Boolean) {
+        if (isComplete) {
+            celebrate()
+        }
         saveTasks()
     }
 
