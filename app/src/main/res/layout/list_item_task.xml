@@ -10,12 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"/>
 
-    <!--
-    Usamos layout_toEndOf y layout_toStartOf para que el texto
-    ocupe el espacio entre el CheckBox y el botón de eliminar.
-    -->
-    <TextView
-        android:id="@+id/tvTaskContent"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
@@ -23,8 +18,25 @@
         android:layout_toStartOf="@id/btnDeleteTask"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:text="Contenido de la tarea"
-        android:textSize="18sp" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTaskContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Contenido de la tarea"
+            android:textSize="18sp" />
+
+        <ImageView
+            android:id="@+id/ivTaskImage"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="8dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="Imagen de la tarea"/>
+
+    </LinearLayout>
 
     <ImageButton
         android:id="@+id/btnDeleteTask"
@@ -35,6 +47,6 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_delete"
         android:contentDescription="Eliminar tarea"/>
-    <!-- Usamos un ícono de sistema por simplicidad -->
+    <!-- Usamos un ícono de sistema por simplicidad (el ic_menu_delete)-->
 
 </RelativeLayout>

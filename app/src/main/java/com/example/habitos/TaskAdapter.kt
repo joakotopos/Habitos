@@ -2,12 +2,14 @@ package com.example.habitos
 
 import android.content.Context
 import android.graphics.Paint
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 
 private const val VIEW_TYPE_TASK = 0
@@ -40,7 +42,7 @@ class TaskAdapter(
         sortAndPrepare() // Re-ordena y encuentra el índice antes de volver a dibujar
         super.notifyDataSetChanged()
     }
-    
+
     override fun getViewTypeCount(): Int = 2
 
     override fun getItemViewType(position: Int): Int {
@@ -75,7 +77,7 @@ class TaskAdapter(
             headerView.setOnClickListener(null)
             return headerView
         }
-        
+
         // Es una vista de tarea
         val listItem = if (convertView != null && convertView.findViewById<CheckBox>(R.id.cbTask) != null) {
             convertView
@@ -88,16 +90,24 @@ class TaskAdapter(
         val cbTask = listItem.findViewById<CheckBox>(R.id.cbTask)
         val tvTaskContent = listItem.findViewById<TextView>(R.id.tvTaskContent)
         val btnDelete = listItem.findViewById<ImageButton>(R.id.btnDeleteTask)
+        val ivTaskImage = listItem.findViewById<ImageView>(R.id.ivTaskImage)
 
         tvTaskContent.text = currentTask.content
         cbTask.isChecked = currentTask.isComplete
+
+        if (currentTask.imagePath != null && currentTask.imagePath.isNotEmpty()) {
+            ivTaskImage.visibility = View.VISIBLE
+            ivTaskImage.setImageURI(Uri.parse(currentTask.imagePath))
+        } else {
+            ivTaskImage.visibility = View.GONE
+        }
 
         if (currentTask.isComplete) {
             tvTaskContent.paintFlags = tvTaskContent.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
         } else {
             tvTaskContent.paintFlags = tvTaskContent.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
         }
-        
+
         cbTask.setOnCheckedChangeListener(null) // ¡Importante!
         cbTask.setOnCheckedChangeListener { _, isChecked ->
             currentTask.isComplete = isChecked

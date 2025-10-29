@@ -9,6 +9,32 @@
         android:id="@+id/etTaskContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Describe tu tarea" />
+        android:importantForAutofill="no"
+        android:hint="Describe tu tarea"
+        android:inputType="text" />
+
+    <ImageView
+        android:id="@+id/ivTaskImage"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="Imagen de la tarea"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btnSelectImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:text="Seleccionar Imagen"/>
+
+    <Button
+        android:id="@+id/btnAddTask"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Añadir Tarea"/>
 
 </LinearLayout>

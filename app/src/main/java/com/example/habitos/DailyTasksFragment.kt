@@ -2,7 +2,7 @@ package com.example.habitos
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Color
+import android.graphics.Color //para agregar diseño a futuro
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -69,8 +69,12 @@ class DailyTasksFragment : Fragment(), TaskCallbacks {
 
         taskSet.forEach { taskString ->
             val parts = taskString.split("::")
-            if (parts.size == 3) {
-                val task = Task(parts[0], parts[1], parts[2].toBoolean())
+            if (parts.size >= 3) { // Asegurarse de que haya al menos 3 partes
+                val id = parts[0]
+                val content = parts[1]
+                val isComplete = parts[2].toBoolean()
+                val imagePath = if (parts.size > 3) parts[3] else null
+                val task = Task(id, content, isComplete, imagePath)
                 taskList.add(task)
             }
         }
@@ -80,7 +84,7 @@ class DailyTasksFragment : Fragment(), TaskCallbacks {
     private fun saveTasks() {
         val taskSet = HashSet<String>()
         taskList.forEach { task ->
-            taskSet.add("${task.id}::${task.content}::${task.isComplete}")
+            taskSet.add("${task.id}::${task.content}::${task.isComplete}::${task.imagePath ?: ""}")
         }
         taskPrefs.edit {
             putStringSet("tasks", taskSet)
