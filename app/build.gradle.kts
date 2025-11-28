@@ -46,11 +46,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    // Supabase Kotlin client
-    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.3.3")
-    implementation("io.github.jan-tennert.supabase:auth-kt:2.3.3")
 
-    // Ktor Client (requerido por Supabase)
-    implementation("io.ktor:ktor-client-okhttp:2.3.6")
 
 }
