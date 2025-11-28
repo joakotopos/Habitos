@@ -1,94 +1,78 @@
 package com.example.habitos
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.graphics.Color //para agregar diseño a futuro
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ListView
 import android.widget.Toast
-import androidx.core.content.edit
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import java.util.HashSet
-import nl.dionsegijn.konfetti.xml.KonfettiView
+import androidx.lifecycle.lifecycleScope
+import com.example.habitos.data.TaskRepository
+import com.example.habitos.data.model.Task
+import com.example.habitos.databinding.FragmentDailyTasksBinding
+import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.util.concurrent.TimeUnit
 
-class DailyTasksFragment : Fragment(), TaskCallbacks {
+class DailyTasksFragment : Fragment() {
 
-    private lateinit var lvTasks: ListView
-    private lateinit var konfettiView: KonfettiView
+    private var _binding: FragmentDailyTasksBinding? = null
+    private val binding get() = _binding!!
 
-    private var taskList = ArrayList<Task>()
-    private lateinit var adapter: TaskAdapter
+    private lateinit var taskAdapter: TaskAdapter
+    private val taskRepository = TaskRepository()
 
-    private var currentUsername: String? = null
-    private lateinit var taskPrefs: SharedPreferences
+    // TODO: Reemplazar con el userId del usuario logueado cuando integres Supabase Auth
+    private var userId: String = "a1b2c3d4-e5f6-7890-1234-567890abcdef" // UUID de prueba
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflamos el layout para este fragment
-        return inflater.inflate(R.layout.fragment_daily_tasks, container, false)
+    ): View {
+        _binding = FragmentDailyTasksBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Obtenemos el usuario de la sesión (MainActivity se lo pasará)
-        currentUsername = arguments?.getString("CURRENT_USER")
-
-        if (currentUsername == null) {
-            Toast.makeText(requireContext(), "Error de sesión en Fragment", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Usamos el contexto del fragment (requireContext()) para SharedPreferences
-        taskPrefs = requireContext().getSharedPreferences("tasks_daily_${currentUsername!!}", Context.MODE_PRIVATE)
-
-        // Inicializar vistas
-        lvTasks = view.findViewById(R.id.lvTasks)
-        konfettiView = view.findViewById(R.id.konfettiView)
-
-        // Inicializar adaptador
-        adapter = TaskAdapter(requireContext(), taskList, this)
-        lvTasks.adapter = adapter
-
-        // Cargar tareas
-        loadTasks()
+        setupRecyclerView()
+        loadDailyTasks()
     }
 
-    private fun loadTasks() {
-        taskList.clear()
-        val taskSet = taskPrefs.getStringSet("tasks", HashSet<String>()) ?: HashSet<String>()
+    private fun setupRecyclerView() {
+        taskAdapter = TaskAdapter(emptyList()) { task ->
+            // Aquí puedes manejar la finalización de la tarea. Por ejemplo, actualizarla en Supabase.
+            // Por ahora, solo celebramos.
+            celebrate()
+            Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+        }
+        binding.rvTasks.adapter = taskAdapter
+    }
 
-        taskSet.forEach { taskString ->
-            val parts = taskString.split("::")
-            if (parts.size >= 3) { // Asegurarse de que haya al menos 3 partes
-                val id = parts[0]
-                val content = parts[1]
-                val isComplete = parts[2].toBoolean()
-                val imagePath = if (parts.size > 3) parts[3] else null
-                val task = Task(id, content, isComplete, imagePath)
-                taskList.add(task)
+    private fun loadDailyTasks() {
+        lifecycleScope.launch {
+            showLoading(true)
+            try {
+                val tasks = taskRepository.getDailyTasks(userId)
+                if (tasks.isNotEmpty()) {
+                    taskAdapter.updateTasks(tasks)
+                } else {
+                    Toast.makeText(requireContext(), "No hay tareas diarias.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Error al cargar tareas: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                showLoading(false)
             }
         }
-        adapter.notifyDataSetChanged()
     }
 
-    private fun saveTasks() {
-        val taskSet = HashSet<String>()
-        taskList.forEach { task ->
-            taskSet.add("${task.id}::${task.content}::${task.isComplete}::${task.imagePath ?: ""}")
-        }
-        taskPrefs.edit {
-            putStringSet("tasks", taskSet)
-        }
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.isVisible = isLoading
+        binding.rvTasks.isVisible = !isLoading
     }
 
     private fun celebrate() {
@@ -101,31 +85,19 @@ class DailyTasksFragment : Fragment(), TaskCallbacks {
             emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
             position = nl.dionsegijn.konfetti.core.Position.Relative(0.5, 0.3)
         )
-        konfettiView.start(party)
+        binding.konfettiView.start(party)
     }
 
-    // --- Callbacks de la interfaz ---
-    override fun onTaskChanged(task: Task, isComplete: Boolean) {
-        if (isComplete) {
-            celebrate()
-        }
-        saveTasks()
-    }
-
-    override fun onTaskDeleted(task: Task) {
-        taskList.remove(task)
-        adapter.notifyDataSetChanged()
-        saveTasks()
-        Toast.makeText(requireContext(), "Tarea eliminada", Toast.LENGTH_SHORT).show()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null // Limpiar la referencia al binding para evitar memory leaks
     }
 
     companion object {
         fun newInstance(username: String): DailyTasksFragment {
-            val fragment = DailyTasksFragment()
-            val args = Bundle()
-            args.putString("CURRENT_USER", username)
-            fragment.arguments = args
-            return fragment
+            // Aunque ya no usamos el username directamente aquí, mantenemos la firma
+            // por consistencia con la estructura original del proyecto.
+            return DailyTasksFragment()
         }
     }
 }

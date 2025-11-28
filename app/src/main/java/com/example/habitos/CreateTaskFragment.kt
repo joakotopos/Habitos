@@ -1,123 +1,103 @@
 package com.example.habitos
 
-import android.app.Activity
-import android.app.AlertDialog
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.edit
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import java.util.HashSet
+import androidx.lifecycle.lifecycleScope
+import com.example.habitos.data.TaskRepository
+import com.example.habitos.data.model.Task
+import com.example.habitos.databinding.FragmentCreateTaskBinding
+import kotlinx.coroutines.launch
 
 class CreateTaskFragment : Fragment() {
 
-    private lateinit var btnCreateTask: Button
-    private var currentUsername: String? = null
-    private var selectedImageUri: Uri? = null
-    private lateinit var ivTaskImage: ImageView
+    private var _binding: FragmentCreateTaskBinding? = null
+    private val binding get() = _binding!!
 
-    private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data: Intent? = result.data
-            data?.data?.let {
-                selectedImageUri = it
-                // Need to take read persmission for persistable access
-                requireActivity().contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                ivTaskImage.setImageURI(selectedImageUri)
-                ivTaskImage.visibility = View.VISIBLE
-            }
-        }
-    }
+    private val taskRepository = TaskRepository()
+
+    // TODO: Reemplazar con el userId del usuario logueado cuando integres Supabase Auth
+    private val userId: String = "a1b2c3d4-e5f6-7890-1234-567890abcdef" // UUID de prueba
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_create_task, container, false)
+    ): View {
+        _binding = FragmentCreateTaskBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        currentUsername = requireActivity().getSharedPreferences("SessionPrefs", Context.MODE_PRIVATE).getString("CURRENT_USER", null)
-
-        btnCreateTask = view.findViewById(R.id.btnCreateTask)
-        btnCreateTask.setOnClickListener {
-            showTaskTypeDialog()
+        binding.btnCreateTask.setOnClickListener {
+            if (validateInput()) {
+                createTask()
+            }
         }
     }
 
-    private fun showTaskTypeDialog() {
-        val options = arrayOf("Tarea Diaria", "Tarea Semanal")
+    private fun validateInput(): Boolean {
+        if (binding.etTaskTitle.text.isNullOrBlank()) {
+            binding.tilTaskTitle.error = "El título no puede estar vacío"
+            return false
+        } else {
+            binding.tilTaskTitle.error = null
+        }
+        return true
+    }
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Tipo de Tarea")
-            .setItems(options) { dialog, which ->
-                when (which) {
-                    0 -> showCreateTaskDialog("daily")
-                    1 -> showCreateTaskDialog("weekly")
+    private fun createTask() {
+        val title = binding.etTaskTitle.text.toString().trim()
+        val description = binding.etTaskDescription.text.toString().trim()
+        val type = if (binding.rbDaily.isChecked) "daily" else "weekly"
+
+        val newTask = Task(
+            userId = userId,
+            title = title,
+            description = description,
+            type = type
+        )
+
+        lifecycleScope.launch {
+            showLoading(true)
+            try {
+                val createdTask = taskRepository.createTask(newTask)
+                if (createdTask != null) {
+                    Toast.makeText(requireContext(), "Tarea '${createdTask.title}' creada con éxito", Toast.LENGTH_SHORT).show()
+                    clearForm()
+                } else {
+                    showError("No se pudo crear la tarea.")
                 }
+            } catch (e: Exception) {
+                showError("Error al crear la tarea: ${e.message}")
+            } finally {
+                showLoading(false)
             }
-            .show()
+        }
     }
 
-    private fun showCreateTaskDialog(type: String) {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_task, null)
-        val etTaskContent = dialogView.findViewById<EditText>(R.id.etTaskContent)
-        val btnSelectImage = dialogView.findViewById<Button>(R.id.btnSelectImage)
-        val btnAddTask = dialogView.findViewById<Button>(R.id.btnAddTask)
-        ivTaskImage = dialogView.findViewById(R.id.ivTaskImage)
-
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Crear Tarea")
-            .setView(dialogView)
-            .create()
-
-        btnSelectImage.setOnClickListener {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
-            intent.type = "image/*"
-            selectImageLauncher.launch(intent)
-        }
-
-        btnAddTask.setOnClickListener {
-            val taskContent = etTaskContent.text.toString().trim()
-            if (taskContent.isNotEmpty()) {
-                saveTask(taskContent, type, selectedImageUri?.toString())
-            } else {
-                Toast.makeText(requireContext(), "Escribe una tarea", Toast.LENGTH_SHORT).show()
-            }
-            dialog.dismiss()
-        }
-
-        dialog.show()
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.isVisible = isLoading
+        binding.btnCreateTask.isEnabled = !isLoading
     }
 
-    private fun saveTask(taskContent: String, type: String, imageUri: String?) {
-        val taskPrefs = requireContext().getSharedPreferences("tasks_${type}_${currentUsername!!}", Context.MODE_PRIVATE)
-        val id = System.currentTimeMillis().toString()
-        val imagePath = imageUri ?: ""
-        val newTask = "$id::$taskContent::false::$imagePath"
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
 
-        val taskSet = taskPrefs.getStringSet("tasks", HashSet<String>())?.toMutableSet() ?: mutableSetOf()
-        taskSet.add(newTask)
+    private fun clearForm() {
+        binding.etTaskTitle.text?.clear()
+        binding.etTaskDescription.text?.clear()
+        binding.rbDaily.isChecked = true
+    }
 
-        taskPrefs.edit {
-            putStringSet("tasks", taskSet)
-        }
-
-        Toast.makeText(requireContext(), "Tarea creada", Toast.LENGTH_SHORT).show()
-        selectedImageUri = null // resetea para la siguiente tarea
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
