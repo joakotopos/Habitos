@@ -23,9 +23,8 @@ class WeeklyTasksFragment : Fragment() {
 
     private lateinit var taskAdapter: TaskAdapter
     private val taskRepository = TaskRepository()
-
-    // TODO: Reemplazar con el userId del usuario logueado cuando integres Supabase Auth
-    private var userId: String = "a1b2c3d4-e5f6-7890-1234-567890abcdef" // UUID de prueba
+    private lateinit var sessionManager: SessionManager
+    private var userId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,24 +36,55 @@ class WeeklyTasksFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        sessionManager = SessionManager(requireContext())
+        userId = sessionManager.getUserId()
+
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         setupRecyclerView()
         loadWeeklyTasks()
     }
 
     private fun setupRecyclerView() {
         taskAdapter = TaskAdapter(emptyList()) { task ->
-            // Lógica para cuando una tarea se marca como completada
-            celebrate()
-            Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+            markTaskAsCompleted(task)
         }
         binding.rvTasks.adapter = taskAdapter
     }
 
+    private fun markTaskAsCompleted(task: Task) {
+        if (task.id == null) {
+            Toast.makeText(requireContext(), "Error: ID de tarea no válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                taskRepository.markTaskAsCompleted(task.id)
+                celebrate()
+                Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+                // Recargar tareas para reflejar el cambio
+                loadWeeklyTasks()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Error al completar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     private fun loadWeeklyTasks() {
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         lifecycleScope.launch {
             showLoading(true)
             try {
-                val tasks = taskRepository.getWeeklyTasks(userId)
+                val tasks = taskRepository.getWeeklyTasks(userId!!)
                 if (tasks.isNotEmpty()) {
                     taskAdapter.updateTasks(tasks)
                 } else {
@@ -91,9 +121,4 @@ class WeeklyTasksFragment : Fragment() {
         _binding = null
     }
 
-    companion object {
-        fun newInstance(username: String): WeeklyTasksFragment {
-            return WeeklyTasksFragment()
-        }
-    }
 }

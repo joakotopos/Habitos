@@ -1,13 +1,11 @@
 package com.example.habitos
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
@@ -17,41 +15,39 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnLogout: Button
     private lateinit var bottomNav: BottomNavigationView
 
-    private var currentUsername: String? = null
-    private lateinit var sessionPrefs: SharedPreferences
+    private lateinit var sessionManager: SessionManager
+    private var userId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 1. Obtener el usuario de la sesión
-        sessionPrefs = getSharedPreferences("SessionPrefs", MODE_PRIVATE)
-        currentUsername = sessionPrefs.getString("CURRENT_USER", null)
+        sessionManager = SessionManager(this)
 
-        // 2. Seguridad: Si no hay usuario, volver al Login
-        if (currentUsername == null) {
+        // Verificar sesión
+        if (!sessionManager.isLoggedIn()) {
             Toast.makeText(this, "Error de sesión", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
 
-        // 3. Inicializar vistas
+        userId = sessionManager.getUserId()
+        val userName = sessionManager.getUserName() ?: sessionManager.getUserEmail()
+
+        // Inicializar vistas
         tvWelcome = findViewById(R.id.tvWelcome)
         btnLogout = findViewById(R.id.btnLogout)
         bottomNav = findViewById(R.id.bottom_navigation)
 
-        // Plantilla de String
-        tvWelcome.text = "Tareas de $currentUsername"
+        tvWelcome.text = "Tareas de $userName"
 
-        // 4. Configurar Listeners
         btnLogout.setOnClickListener { logout() }
         bottomNav.setOnNavigationItemSelectedListener(navListener)
 
-        // 5. Cargar el fragmento inicial (Diarias)
+        // Cargar el fragmento inicial (Diarias)
         if (savedInstanceState == null) {
-            val dailyFragment = DailyTasksFragment.newInstance(currentUsername!!)
-            loadFragment(dailyFragment)
+            loadFragment(DailyTasksFragment())
         }
     }
 
@@ -60,13 +56,13 @@ class MainActivity : AppCompatActivity() {
 
         when (item.itemId) {
             R.id.navigation_daily -> {
-                selectedFragment = DailyTasksFragment.newInstance(currentUsername!!)
+                selectedFragment = DailyTasksFragment()
             }
             R.id.navigation_create -> {
                 selectedFragment = CreateTaskFragment()
             }
             R.id.navigation_weekly -> {
-                selectedFragment = WeeklyTasksFragment.newInstance(currentUsername!!)
+                selectedFragment = WeeklyTasksFragment()
             }
         }
 
@@ -84,7 +80,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun logout() {
-        sessionPrefs.edit { remove("CURRENT_USER") }
+        sessionManager.clearSession()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }

@@ -24,9 +24,8 @@ class DailyTasksFragment : Fragment() {
 
     private lateinit var taskAdapter: TaskAdapter
     private val taskRepository = TaskRepository()
-
-    // TODO: Reemplazar con el userId del usuario logueado cuando integres Supabase Auth
-    private var userId: String = "a1b2c3d4-e5f6-7890-1234-567890abcdef" // UUID de prueba
+    private lateinit var sessionManager: SessionManager
+    private var userId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,25 +37,55 @@ class DailyTasksFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        sessionManager = SessionManager(requireContext())
+        userId = sessionManager.getUserId()
+
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         setupRecyclerView()
         loadDailyTasks()
     }
 
     private fun setupRecyclerView() {
         taskAdapter = TaskAdapter(emptyList()) { task ->
-            // Aquí puedes manejar la finalización de la tarea. Por ejemplo, actualizarla en Supabase.
-            // Por ahora, solo celebramos.
-            celebrate()
-            Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+            markTaskAsCompleted(task)
         }
         binding.rvTasks.adapter = taskAdapter
     }
 
+    private fun markTaskAsCompleted(task: Task) {
+        if (task.id == null) {
+            Toast.makeText(requireContext(), "Error: ID de tarea no válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                taskRepository.markTaskAsCompleted(task.id)
+                celebrate()
+                Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+                // Recargar tareas para reflejar el cambio
+                loadDailyTasks()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Error al completar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     private fun loadDailyTasks() {
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         lifecycleScope.launch {
             showLoading(true)
             try {
-                val tasks = taskRepository.getDailyTasks(userId)
+                val tasks = taskRepository.getDailyTasks(userId!!)
                 if (tasks.isNotEmpty()) {
                     taskAdapter.updateTasks(tasks)
                 } else {
@@ -93,11 +122,4 @@ class DailyTasksFragment : Fragment() {
         _binding = null // Limpiar la referencia al binding para evitar memory leaks
     }
 
-    companion object {
-        fun newInstance(username: String): DailyTasksFragment {
-            // Aunque ya no usamos el username directamente aquí, mantenemos la firma
-            // por consistencia con la estructura original del proyecto.
-            return DailyTasksFragment()
-        }
-    }
 }

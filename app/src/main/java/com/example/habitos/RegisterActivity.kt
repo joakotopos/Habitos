@@ -1,60 +1,77 @@
 package com.example.habitos
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Patterns
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
+import androidx.lifecycle.lifecycleScope
+import com.example.habitos.data.AuthRepository
+import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
 
-    // 'lateinit var' significa que la variable será inicializada más tarde
-    private lateinit var etUsername: EditText
+    private lateinit var etName: EditText
+    private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
     private lateinit var etConfirmPassword: EditText
     private lateinit var btnRegister: Button
     private lateinit var tvGoToLogin: TextView
+    private lateinit var progressBar: ProgressBar
 
-    private lateinit var userPrefs: SharedPreferences
+    private val authRepository = AuthRepository()
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-        // 1. Inicializar vistas
-        etUsername = findViewById(R.id.etRegisterUsername)
+        sessionManager = SessionManager(this)
+
+        // Inicializar vistas
+        etName = findViewById(R.id.etRegisterName)
+        etEmail = findViewById(R.id.etRegisterEmail)
         etPassword = findViewById(R.id.etRegisterPassword)
         etConfirmPassword = findViewById(R.id.etRegisterConfirmPassword)
         btnRegister = findViewById(R.id.btnRegister)
         tvGoToLogin = findViewById(R.id.tvGoToLogin)
+        progressBar = ProgressBar(this).apply {
+            visibility = View.GONE
+        }
 
-        // 2. Inicializar SharedPreferences
-        userPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-
-        // 3. Configurar listener (lambda)
         btnRegister.setOnClickListener {
             registerUser()
         }
 
         tvGoToLogin.setOnClickListener {
-            // Inicia LoginActivity
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 
     private fun registerUser() {
-        val username = etUsername.text.toString().trim()
+        val name = etName.text.toString().trim()
+        val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString().trim()
         val confirmPassword = etConfirmPassword.text.toString().trim()
 
-        // 4. Validaciones
-        if (username.isEmpty() || password.isEmpty()) {
+        // Validaciones
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Por favor, rellena todos los campos", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this, "Por favor, ingresa un correo válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (password.length < 6) {
+            Toast.makeText(this, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -63,19 +80,50 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
-        // 5. Comprobar si el usuario ya existe
-        if (userPrefs.contains(username)) {
-            Toast.makeText(this, "El nombre de usuario ya existe", Toast.LENGTH_SHORT).show()
-            return
+        // Registrar en Supabase
+        lifecycleScope.launch {
+            showLoading(true)
+            try {
+                val response = authRepository.signUp(email, password, name)
+                
+                // Guardar sesión
+                sessionManager.saveSession(
+                    userId = response.user.id,
+                    accessToken = response.accessToken,
+                    refreshToken = response.refreshToken,
+                    email = response.user.email,
+                    name = name
+                )
+
+                Toast.makeText(this@RegisterActivity, "¡Registro exitoso!", Toast.LENGTH_SHORT).show()
+                
+                // Ir a MainActivity
+                startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
+                finish()
+
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Toast.makeText(
+                    this@RegisterActivity, 
+                    "Error HTTP ${e.code()}: $errorBody", 
+                    Toast.LENGTH_LONG
+                ).show()
+                e.printStackTrace()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@RegisterActivity, 
+                    "Error en el registro: ${e.message}", 
+                    Toast.LENGTH_LONG
+                ).show()
+                e.printStackTrace()
+            } finally {
+                showLoading(false)
+            }
         }
+    }
 
-        // 6. Guardar el nuevo usuario
-        userPrefs.edit {
-            putString(username, password)
-        }
-
-
-        Toast.makeText(this, "¡Registro exitoso!", Toast.LENGTH_SHORT).show()
-        finish()
+    private fun showLoading(isLoading: Boolean) {
+        btnRegister.isEnabled = !isLoading
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 }

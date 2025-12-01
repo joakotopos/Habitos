@@ -19,9 +19,8 @@ class CreateTaskFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val taskRepository = TaskRepository()
-
-    // TODO: Reemplazar con el userId del usuario logueado cuando integres Supabase Auth
-    private val userId: String = "a1b2c3d4-e5f6-7890-1234-567890abcdef" // UUID de prueba
+    private lateinit var sessionManager: SessionManager
+    private var userId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,6 +32,14 @@ class CreateTaskFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        sessionManager = SessionManager(requireContext())
+        userId = sessionManager.getUserId()
+
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         binding.btnCreateTask.setOnClickListener {
             if (validateInput()) {
@@ -56,8 +63,13 @@ class CreateTaskFragment : Fragment() {
         val description = binding.etTaskDescription.text.toString().trim()
         val type = if (binding.rbDaily.isChecked) "daily" else "weekly"
 
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val newTask = Task(
-            userId = userId,
+            userId = userId!!,
             title = title,
             description = description,
             type = type
