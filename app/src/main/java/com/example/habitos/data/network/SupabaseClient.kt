@@ -9,7 +9,7 @@ object SupabaseClient {
 
     private const val BASE_URL = "https://pairixgqshzufmtnxqqj.supabase.co/rest/v1/"
 
-    val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhaXJpeGdxaHNodXpmbXRueHFxaiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzE2NDEzMTI4LCJleHAiOjIwMzE5ODkxMjh9.Cg3Ct6mdsE65NU6bXUIsDw_B55g0dKH-i-v3RaiUoow"
+    val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhaXJpeGdxc2h6dWZtdG54cXFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTUzNTIsImV4cCI6MjA3OTg3MTM1Mn0.-7NhR2GMn6vi8XQUyj0UqdVK58_IidiYeIhPEq2vWIM"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
