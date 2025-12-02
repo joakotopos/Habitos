@@ -25,16 +25,20 @@ class AuthRepository {
         
         // Crear perfil en la tabla profiles
         try {
+            android.util.Log.d("AuthRepository", "Intentando crear perfil: userId=${response.user.id}, email=$email, name=$name")
             val profile = Profile(
                 id = response.user.id,
                 email = email,
                 name = name
             )
             val authorization = "Bearer ${response.accessToken}"
-            authApiService.createProfile(apiKey, authorization, profile = profile)
+            val createdProfile = authApiService.createProfile(apiKey, authorization, profile = profile)
+            android.util.Log.d("AuthRepository", "Perfil creado exitosamente: $createdProfile")
+        } catch (e: retrofit2.HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            android.util.Log.e("AuthRepository", "Error HTTP ${e.code()} al crear perfil: $errorBody", e)
         } catch (e: Exception) {
-            // Si falla crear el perfil, no bloqueamos el registro
-            // pero podrías manejarlo de otra forma
+            android.util.Log.e("AuthRepository", "Error al crear perfil: ${e.message}", e)
             e.printStackTrace()
         }
         

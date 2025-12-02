@@ -35,7 +35,7 @@ interface TaskApiService {
         @Header("Content-Type") contentType: String = "application/json",
         @Header("Prefer") prefer: String = "return=representation",
         @Query("id") taskId: String,
-        @Body task: Map<String, Any>
+        @Body task: Map<String, @JvmSuppressWildcards Any>
     ): List<Task>
 
     @DELETE("tasks")

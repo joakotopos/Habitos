@@ -53,10 +53,51 @@ class WeeklyTasksFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        taskAdapter = TaskAdapter(emptyList()) { task ->
-            markTaskAsCompleted(task)
-        }
+        taskAdapter = TaskAdapter(
+            tasks = emptyList(),
+            onTaskCompleted = { task -> markTaskAsCompleted(task) },
+            onTaskDeleted = { task -> deleteTask(task) }
+        )
         binding.rvTasks.adapter = taskAdapter
+    }
+
+    private fun deleteTask(task: Task) {
+        if (task.id == null) {
+            Toast.makeText(requireContext(), "Error: ID de tarea no válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Mostrar diálogo de confirmación
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Eliminar tarea")
+            .setMessage("¿Estás seguro de que quieres eliminar '${task.title}'?")
+            .setPositiveButton("Eliminar") { _, _ ->
+                performDeleteTask(task)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun performDeleteTask(task: Task) {
+        lifecycleScope.launch {
+            try {
+                android.util.Log.d("WeeklyTasksFragment", "Eliminando tarea: ${task.id}")
+                taskRepository.deleteTask(task.id!!)
+                Toast.makeText(requireContext(), "Tarea '${task.title}' eliminada", Toast.LENGTH_SHORT).show()
+                loadWeeklyTasks()
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                android.util.Log.e("WeeklyTasksFragment", "Error HTTP ${e.code()}: $errorBody")
+                Toast.makeText(
+                    requireContext(), 
+                    "Error HTTP ${e.code()}: ${errorBody ?: e.message}", 
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                android.util.Log.e("WeeklyTasksFragment", "Error al eliminar: ${e.message}", e)
+                Toast.makeText(requireContext(), "Error al eliminar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun markTaskAsCompleted(task: Task) {

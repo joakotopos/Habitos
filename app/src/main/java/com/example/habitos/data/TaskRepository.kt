@@ -22,17 +22,28 @@ class TaskRepository(private val accessToken: String) {
         return response.firstOrNull()
     }
 
-    suspend fun updateTask(taskId: String, updates: Map<String, Any>): Task? {
+    suspend fun updateTask(taskId: String, updates: Map<String, @JvmSuppressWildcards Any>): Task? {
         val response = taskApiService.updateTask(apiKey, authorization, taskId = "eq.$taskId", task = updates)
         return response.firstOrNull()
     }
 
     suspend fun markTaskAsCompleted(taskId: String): Task? {
-        val updates = mapOf("is_completed" to true)
+        val updates: Map<String, Any> = mapOf("is_completed" to true)
         return updateTask(taskId, updates)
     }
 
     suspend fun deleteTask(taskId: String) {
-        taskApiService.deleteTask(apiKey, authorization, "eq.$taskId")
+        android.util.Log.d("TaskRepository", "Intentando eliminar tarea con ID: $taskId")
+        try {
+            taskApiService.deleteTask(apiKey, authorization, "eq.$taskId")
+            android.util.Log.d("TaskRepository", "Tarea eliminada exitosamente")
+        } catch (e: retrofit2.HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            android.util.Log.e("TaskRepository", "Error HTTP ${e.code()} al eliminar: $errorBody")
+            throw e
+        } catch (e: Exception) {
+            android.util.Log.e("TaskRepository", "Error al eliminar tarea: ${e.message}", e)
+            throw e
+        }
     }
 }

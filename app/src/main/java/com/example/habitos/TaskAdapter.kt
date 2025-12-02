@@ -9,7 +9,8 @@ import com.example.habitos.databinding.ItemTaskBinding
 
 class TaskAdapter(
     private var tasks: List<Task>,
-    private val onTaskCompleted: (Task) -> Unit
+    private val onTaskCompleted: (Task) -> Unit,
+    private val onTaskDeleted: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -60,6 +61,11 @@ class TaskAdapter(
                 if (isChecked) {
                     onTaskCompleted(task)
                 }
+            }
+
+            // Configurar botón de eliminar
+            binding.btnDeleteTask.setOnClickListener {
+                onTaskDeleted(task)
             }
         }
     }
