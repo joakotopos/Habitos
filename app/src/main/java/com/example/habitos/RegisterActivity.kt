@@ -84,6 +84,8 @@ class RegisterActivity : AppCompatActivity() {
         lifecycleScope.launch {
             showLoading(true)
             try {
+                // Log para debug
+                android.util.Log.d("RegisterActivity", "Intentando registrar: email='$email', name='$name'")
                 val response = authRepository.signUp(email, password, name)
                 
                 // Guardar sesión

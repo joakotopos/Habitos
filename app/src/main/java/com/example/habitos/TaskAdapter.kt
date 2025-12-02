@@ -2,6 +2,7 @@ package com.example.habitos
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.habitos.data.model.Task
 import com.example.habitos.databinding.ItemTaskBinding
@@ -24,8 +25,26 @@ class TaskAdapter(
     override fun getItemCount(): Int = tasks.size
 
     fun updateTasks(newTasks: List<Task>) {
+        val diffCallback = TaskDiffCallback(tasks, newTasks)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         tasks = newTasks
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    private class TaskDiffCallback(
+        private val oldList: List<Task>,
+        private val newList: List<Task>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+        
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].id == newList[newItemPosition].id
+        }
+        
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition] == newList[newItemPosition]
+        }
     }
 
     inner class TaskViewHolder(private val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
