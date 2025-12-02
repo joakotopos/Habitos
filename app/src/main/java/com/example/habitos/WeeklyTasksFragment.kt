@@ -22,7 +22,7 @@ class WeeklyTasksFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var taskAdapter: TaskAdapter
-    private val taskRepository = TaskRepository()
+    private lateinit var taskRepository: TaskRepository
     private lateinit var sessionManager: SessionManager
     private var userId: String? = null
 
@@ -39,11 +39,14 @@ class WeeklyTasksFragment : Fragment() {
         
         sessionManager = SessionManager(requireContext())
         userId = sessionManager.getUserId()
+        val accessToken = sessionManager.getAccessToken()
 
-        if (userId == null) {
+        if (userId == null || accessToken == null) {
             Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
             return
         }
+
+        taskRepository = TaskRepository(accessToken)
 
         setupRecyclerView()
         loadWeeklyTasks()

@@ -3,11 +3,11 @@ package com.example.habitos.data
 import com.example.habitos.data.model.Task
 import com.example.habitos.data.network.SupabaseClient
 
-class TaskRepository {
+class TaskRepository(private val accessToken: String) {
 
     private val taskApiService = SupabaseClient.taskApiService
     private val apiKey = SupabaseClient.supabaseKey
-    private val authorization = "Bearer ${SupabaseClient.supabaseKey}"
+    private val authorization = "Bearer $accessToken"
 
     suspend fun getDailyTasks(userId: String): List<Task> {
         return taskApiService.getTasks(apiKey, authorization, "eq.$userId", "eq.daily")

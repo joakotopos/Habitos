@@ -18,7 +18,7 @@ class CreateTaskFragment : Fragment() {
     private var _binding: FragmentCreateTaskBinding? = null
     private val binding get() = _binding!!
 
-    private val taskRepository = TaskRepository()
+    private lateinit var taskRepository: TaskRepository
     private lateinit var sessionManager: SessionManager
     private var userId: String? = null
 
@@ -35,11 +35,14 @@ class CreateTaskFragment : Fragment() {
 
         sessionManager = SessionManager(requireContext())
         userId = sessionManager.getUserId()
+        val accessToken = sessionManager.getAccessToken()
 
-        if (userId == null) {
+        if (userId == null || accessToken == null) {
             Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
             return
         }
+
+        taskRepository = TaskRepository(accessToken)
 
         binding.btnCreateTask.setOnClickListener {
             if (validateInput()) {
@@ -61,7 +64,13 @@ class CreateTaskFragment : Fragment() {
     private fun createTask() {
         val title = binding.etTaskTitle.text.toString().trim()
         val description = binding.etTaskDescription.text.toString().trim()
+        
+        // Debug: verificar estado de radio buttons
+        android.util.Log.d("CreateTask", "rbDaily.isChecked: ${binding.rbDaily.isChecked}")
+        android.util.Log.d("CreateTask", "rbWeekly.isChecked: ${binding.rbWeekly.isChecked}")
+        
         val type = if (binding.rbDaily.isChecked) "daily" else "weekly"
+        android.util.Log.d("CreateTask", "Type seleccionado: '$type' (length: ${type.length})")
 
         if (userId == null) {
             Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
@@ -74,10 +83,13 @@ class CreateTaskFragment : Fragment() {
             description = description,
             type = type
         )
+        
+        android.util.Log.d("CreateTask", "Task creado: $newTask")
 
         lifecycleScope.launch {
             showLoading(true)
             try {
+                android.util.Log.d("CreateTask", "Creando tarea: userId=$userId, title=$title, type=$type")
                 val createdTask = taskRepository.createTask(newTask)
                 if (createdTask != null) {
                     Toast.makeText(requireContext(), "Tarea '${createdTask.title}' creada con éxito", Toast.LENGTH_SHORT).show()
@@ -85,7 +97,12 @@ class CreateTaskFragment : Fragment() {
                 } else {
                     showError("No se pudo crear la tarea.")
                 }
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                android.util.Log.e("CreateTask", "HTTP ${e.code()}: $errorBody")
+                showError("Error HTTP ${e.code()}: $errorBody")
             } catch (e: Exception) {
+                android.util.Log.e("CreateTask", "Error: ${e.message}", e)
                 showError("Error al crear la tarea: ${e.message}")
             } finally {
                 showLoading(false)
