@@ -4,95 +4,176 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:background="@color/dark_background"
+    android:padding="20dp"
     tools:context=".CreateTaskFragment">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilTaskTitle"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardForm"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Título de la tarea"
+        app:cardBackgroundColor="@color/dark_card"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
+        app:strokeColor="@color/border_color"
+        app:strokeWidth="1dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etTaskTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilTaskDescription"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Descripción (opcional)"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tilTaskTitle">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etTaskDescription"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="top"
-            android:lines="3" />
+            android:padding="24dp">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                android:id="@+id/tvCreateTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nueva Tarea"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvTaskTypeLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Tipo de Tarea:"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tilTaskDescription" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilTaskTitle"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="Título de la tarea"
+                app:boxBackgroundColor="@color/dark_surface"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/primary_purple"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="@color/primary_purple_light"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvCreateTitle">
 
-    <RadioGroup
-        android:id="@+id/rgTaskType"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvTaskTypeLabel">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTaskTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <RadioButton
-            android:id="@+id/rbDaily"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Diaria" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilTaskDescription"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Descripción (opcional)"
+                app:boxBackgroundColor="@color/dark_surface"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/primary_purple"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="@color/primary_purple_light"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tilTaskTitle">
 
-        <RadioButton
-            android:id="@+id/rbWeekly"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="Semanal" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTaskDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:lines="3"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    </RadioGroup>
+            <TextView
+                android:id="@+id/tvTaskTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Tipo de Tarea:"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tilTaskDescription" />
 
-    <Button
-        android:id="@+id/btnCreateTask"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Crear Tarea"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rgTaskType" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardRadioGroup"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="@color/dark_surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvTaskTypeLabel">
+
+                <RadioGroup
+                    android:id="@+id/rgTaskType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <RadioButton
+                        android:id="@+id/rbDaily"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:checked="true"
+                        android:text="Diaria"
+                        android:textColor="@color/text_primary"
+                        android:buttonTint="@color/primary_purple_light" />
+
+                    <RadioButton
+                        android:id="@+id/rbWeekly"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Semanal"
+                        android:textColor="@color/text_primary"
+                        android:buttonTint="@color/accent_cyan" />
+                </RadioGroup>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCreateTask"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="28dp"
+                android:text="Crear Tarea"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                app:backgroundTint="@color/button_primary"
+                app:cornerRadius="18dp"
+                app:elevation="10dp"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart"
+                app:iconTint="@color/text_primary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cardRadioGroup" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <ProgressBar
         android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
+        style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:indeterminateTint="@color/primary_purple_light"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

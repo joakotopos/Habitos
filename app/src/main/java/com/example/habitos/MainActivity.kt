@@ -2,17 +2,17 @@ package com.example.habitos
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var tvWelcome: TextView
-    private lateinit var btnLogout: Button
+    private lateinit var btnLogout: MaterialButton
     private lateinit var bottomNav: BottomNavigationView
 
     private lateinit var sessionManager: SessionManager
@@ -75,6 +75,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                android.R.anim.fade_in,
+                android.R.anim.fade_out,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
             .replace(R.id.fragment_container, fragment)
             .commit()
     }

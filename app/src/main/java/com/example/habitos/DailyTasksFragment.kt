@@ -37,7 +37,7 @@ class DailyTasksFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         sessionManager = SessionManager(requireContext())
         userId = sessionManager.getUserId()
         val accessToken = sessionManager.getAccessToken()
@@ -55,7 +55,7 @@ class DailyTasksFragment : Fragment() {
 
     private fun setupRecyclerView() {
         taskAdapter = TaskAdapter(
-            tasks = emptyList(),
+            items = emptyList(),
             onTaskCompleted = { task -> markTaskAsCompleted(task) },
             onTaskDeleted = { task -> deleteTask(task) }
         )
@@ -84,14 +84,23 @@ class DailyTasksFragment : Fragment() {
             try {
                 android.util.Log.d("DailyTasksFragment", "Eliminando tarea: ${task.id}")
                 taskRepository.deleteTask(task.id!!)
+
+                // Actualizar lista inmediatamente sin mostrar loading
+                val currentItems = taskAdapter.itemsList.toMutableList()
+                currentItems.removeAll { item -> 
+                    item is TaskAdapter.TaskItem.TaskData && item.task.id == task.id 
+                }
+                taskAdapter.updateItems(currentItems)
+
                 Toast.makeText(requireContext(), "Tarea '${task.title}' eliminada", Toast.LENGTH_SHORT).show()
-                loadDailyTasks()
+                // Recargar desde servidor en background para sincronizar (sin mostrar loading)
+                loadDailyTasks(showLoadingIndicator = false)
             } catch (e: retrofit2.HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
                 android.util.Log.e("DailyTasksFragment", "Error HTTP ${e.code()}: $errorBody")
                 Toast.makeText(
-                    requireContext(), 
-                    "Error HTTP ${e.code()}: ${errorBody ?: e.message}", 
+                    requireContext(),
+                    "Error HTTP ${e.code()}: ${errorBody ?: e.message}",
                     Toast.LENGTH_LONG
                 ).show()
             } catch (e: Exception) {
@@ -120,25 +129,46 @@ class DailyTasksFragment : Fragment() {
         }
     }
 
-    private fun loadDailyTasks() {
+    private fun loadDailyTasks(showLoadingIndicator: Boolean = true) {
         if (userId == null) {
             Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
-            showLoading(true)
+            if (showLoadingIndicator) {
+                showLoading(true)
+            }
             try {
                 val tasks = taskRepository.getDailyTasks(userId!!)
-                if (tasks.isNotEmpty()) {
-                    taskAdapter.updateTasks(tasks)
-                } else {
-                    Toast.makeText(requireContext(), "No hay tareas diarias.", Toast.LENGTH_SHORT).show()
+                
+                // Separar tareas pendientes y completadas
+                val pendingTasks = tasks.filter { !it.isCompleted }
+                val completedTasks = tasks.filter { it.isCompleted }
+                
+                // Crear lista de items con secciones
+                val items = mutableListOf<TaskAdapter.TaskItem>()
+                
+                // Agregar tareas pendientes
+                pendingTasks.forEach { task ->
+                    items.add(TaskAdapter.TaskItem.TaskData(task))
                 }
+                
+                // Agregar sección de tareas completadas si hay tareas completadas
+                if (completedTasks.isNotEmpty()) {
+                    items.add(TaskAdapter.TaskItem.Header("✅ Tareas Completadas"))
+                    completedTasks.forEach { task ->
+                        items.add(TaskAdapter.TaskItem.TaskData(task))
+                    }
+                }
+                
+                taskAdapter.updateItems(items)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Error al cargar tareas: ${e.message}", Toast.LENGTH_LONG).show()
             } finally {
-                showLoading(false)
+                if (showLoadingIndicator) {
+                    showLoading(false)
+                }
             }
         }
     }
@@ -165,5 +195,4 @@ class DailyTasksFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
 }

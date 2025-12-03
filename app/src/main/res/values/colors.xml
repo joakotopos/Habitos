@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Colores Base -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Tema Oscuro - Colores Principales -->
+    <color name="dark_background">#0F0F1E</color>
+    <color name="dark_surface">#1A1A2E</color>
+    <color name="dark_surface_variant">#16213E</color>
+    <color name="dark_card">#1E2749</color>
+    
+    <!-- Colores de Acento -->
+    <color name="primary_purple">#7B2CBF</color>
+    <color name="primary_purple_dark">#5A189A</color>
+    <color name="primary_purple_light">#9D4EDD</color>
+    <color name="accent_pink">#E63946</color>
+    <color name="accent_cyan">#06FFA5</color>
+    <color name="accent_gold">#FFB800</color>
+    
+    <!-- Gradientes -->
+    <color name="gradient_start">#7B2CBF</color>
+    <color name="gradient_mid">#9D4EDD</color>
+    <color name="gradient_end">#C77DFF</color>
+    
+    <!-- Texto -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B8B8D1</color>
+    <color name="text_hint">#6B6B8A</color>
+    
+    <!-- Estados -->
+    <color name="error_red">#E63946</color>
+    <color name="success_green">#06FFA5</color>
+    <color name="warning_orange">#FFB800</color>
+    
+    <!-- Botones -->
+    <color name="button_primary">#7B2CBF</color>
+    <color name="button_primary_pressed">#5A189A</color>
+    <color name="button_danger">#E63946</color>
+    <color name="button_danger_pressed">#C1121F</color>
+    
+    <!-- Bordes y Dividers -->
+    <color name="border_color">#2D2D44</color>
+    <color name="divider_color">#252538</color>
 </resources>
