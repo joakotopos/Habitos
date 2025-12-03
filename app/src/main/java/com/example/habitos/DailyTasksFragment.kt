@@ -41,6 +41,9 @@ class DailyTasksFragment : Fragment() {
         userId = sessionManager.getUserId()
         val accessToken = sessionManager.getAccessToken()
 
+        android.util.Log.d("DailyTasksFragment", "UserId obtenido de sesión: $userId")
+        android.util.Log.d("DailyTasksFragment", "AccessToken presente: ${accessToken != null}")
+
         if (userId == null || accessToken == null) {
             BubbleToast.show(requireActivity(), "Error: sesión no válida")
             return
@@ -172,12 +175,19 @@ class DailyTasksFragment : Fragment() {
             return
         }
 
+        android.util.Log.d("DailyTasksFragment", "Cargando tareas para userId: $userId")
+
         lifecycleScope.launch {
             if (showLoadingIndicator) {
                 showLoading(true)
             }
             try {
                 val tasks = taskRepository.getDailyTasks(userId!!)
+                
+                android.util.Log.d("DailyTasksFragment", "Tareas cargadas: ${tasks.size} tareas")
+                tasks.forEach { task ->
+                    android.util.Log.d("DailyTasksFragment", "Tarea: ${task.title} - userId: ${task.userId}")
+                }
                 
                 // Separar tareas pendientes y completadas
                 val pendingTasks = tasks.filter { !it.isCompleted }

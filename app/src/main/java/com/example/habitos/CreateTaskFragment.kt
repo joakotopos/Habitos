@@ -37,6 +37,8 @@ class CreateTaskFragment : Fragment() {
         userId = sessionManager.getUserId()
         val accessToken = sessionManager.getAccessToken()
 
+        android.util.Log.d("CreateTaskFragment", "UserId al crear tarea: $userId")
+
         if (userId == null || accessToken == null) {
             Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
             return
