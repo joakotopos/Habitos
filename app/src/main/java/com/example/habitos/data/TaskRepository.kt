@@ -32,6 +32,11 @@ class TaskRepository(private val accessToken: String) {
         return updateTask(taskId, updates)
     }
 
+    suspend fun updateTaskCompletionStatus(taskId: String, isCompleted: Boolean): Task? {
+        val updates: Map<String, Any> = mapOf("is_completed" to isCompleted)
+        return updateTask(taskId, updates)
+    }
+
     suspend fun deleteTask(taskId: String) {
         android.util.Log.d("TaskRepository", "Intentando eliminar tarea con ID: $taskId")
         try {

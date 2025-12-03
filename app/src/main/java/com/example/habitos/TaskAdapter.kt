@@ -122,9 +122,7 @@ class TaskAdapter(
             binding.cbTaskCompleted.isChecked = task.isCompleted
 
             binding.cbTaskCompleted.setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) {
-                    onTaskCompleted(task)
-                }
+                onTaskCompleted(task)
             }
 
             // Configurar botón de eliminar

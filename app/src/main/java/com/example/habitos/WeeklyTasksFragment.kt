@@ -117,13 +117,23 @@ class WeeklyTasksFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                taskRepository.markTaskAsCompleted(task.id)
-                celebrate()
-                Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+                // Alternar el estado de completado
+                val newStatus = !task.isCompleted
+                taskRepository.updateTaskCompletionStatus(task.id, newStatus)
+                
+                if (newStatus) {
+                    celebrate()
+                    Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(), "Tarea '${task.title}' marcada como pendiente", Toast.LENGTH_SHORT).show()
+                }
+                
                 // Recargar tareas para reflejar el cambio
                 loadWeeklyTasks()
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error al completar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "Error al actualizar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+                // Recargar para restaurar el estado correcto
+                loadWeeklyTasks()
             }
         }
     }
