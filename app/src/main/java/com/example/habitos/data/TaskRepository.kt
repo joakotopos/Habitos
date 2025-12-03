@@ -3,7 +3,7 @@ package com.example.habitos.data
 import com.example.habitos.data.model.Task
 import com.example.habitos.data.network.SupabaseClient
 
-class TaskRepository(private val accessToken: String) {
+class TaskRepository(private val accessToken: String = "") {
 
     private val taskApiService = SupabaseClient.taskApiService
     private val apiKey = SupabaseClient.supabaseKey
