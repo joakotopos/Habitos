@@ -8,7 +8,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.habitos.data.AuthRepository
@@ -59,12 +58,12 @@ class LoginActivity : AppCompatActivity() {
         val password = etPassword.text.toString().trim()
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Por favor, rellena los campos", Toast.LENGTH_SHORT).show()
+            BubbleToast.show(this, "Por favor, rellena los campos")
             return
         }
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Por favor, ingresa un correo válido", Toast.LENGTH_SHORT).show()
+            BubbleToast.show(this, "Por favor, ingresa un correo válido")
             return
         }
 
@@ -72,11 +71,17 @@ class LoginActivity : AppCompatActivity() {
             showLoading(true)
             try {
                 val response = authRepository.signIn(email, password)
-                
-                // Obtener el nombre del usuario desde el perfil
-                val profile = authRepository.getProfile(response.user.id, response.accessToken)
-                val userName = profile?.name ?: response.user.email
-                
+
+                // Intentar obtener el nombre desde user_metadata o desde el perfil
+                val userMetadataName = response.user.userMetadata?.get("name") as? String
+                val userName = if (userMetadataName != null) {
+                    userMetadataName
+                } else {
+                    // Si no está en metadata, intentar obtener del perfil
+                    val profile = authRepository.getProfile(response.user.id, response.accessToken)
+                    profile?.name ?: email.substringBefore("@")
+                }
+
                 // Guardar sesión
                 sessionManager.saveSession(
                     userId = response.user.id,
@@ -86,18 +91,17 @@ class LoginActivity : AppCompatActivity() {
                     name = userName
                 )
 
-                Toast.makeText(this@LoginActivity, "¡Bienvenido, $userName!", Toast.LENGTH_SHORT).show()
-
+                BubbleToast.show(this@LoginActivity, "¡Bienvenido, $userName!")
                 // Ir a MainActivity
                 startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                 finish()
 
             } catch (e: Exception) {
-                Toast.makeText(
+                BubbleToast.show(
                     this@LoginActivity,
                     "Error al iniciar sesión: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                    3000
+                )
                 e.printStackTrace()
             } finally {
                 showLoading(false)

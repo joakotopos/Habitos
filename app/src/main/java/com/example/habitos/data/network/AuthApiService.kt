@@ -18,22 +18,20 @@ interface AuthApiService {
         @Header("Content-Type") contentType: String = "application/json",
         @Body request: SignUpRequest
     ): AuthResponse
-    
+
     @POST("auth/v1/token?grant_type=password")
     suspend fun signIn(
         @Header("apikey") apiKey: String,
         @Header("Content-Type") contentType: String = "application/json",
         @Body request: SignInRequest
-    ): AuthResponse
-
-    @GET("profiles")
+    ): AuthResponse    @GET("rest/v1/profiles")
     suspend fun getProfile(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
         @Query("id") userId: String
     ): List<Profile>
 
-    @POST("profiles")
+    @POST("rest/v1/profiles")
     suspend fun createProfile(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authorization: String,
