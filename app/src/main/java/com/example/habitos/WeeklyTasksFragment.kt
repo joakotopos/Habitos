@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -42,7 +41,7 @@ class WeeklyTasksFragment : Fragment() {
         val accessToken = sessionManager.getAccessToken()
 
         if (userId == null || accessToken == null) {
-            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            BubbleToast.show(requireActivity(), "Error: sesión no válida")
             return
         }
 
@@ -63,7 +62,7 @@ class WeeklyTasksFragment : Fragment() {
 
     private fun deleteTask(task: Task) {
         if (task.id == null) {
-            Toast.makeText(requireContext(), "Error: ID de tarea no válido", Toast.LENGTH_SHORT).show()
+            BubbleToast.show(requireActivity(), "Error: ID de tarea no válido")
             return
         }
 
@@ -91,56 +90,84 @@ class WeeklyTasksFragment : Fragment() {
                 }
                 taskAdapter.updateItems(currentItems)
 
-                Toast.makeText(requireContext(), "Tarea '${task.title}' eliminada", Toast.LENGTH_SHORT).show()
+                BubbleToast.show(requireActivity(), "Tarea '${task.title}' eliminada")
                 // Recargar desde servidor en background para sincronizar (sin mostrar loading)
                 loadWeeklyTasks(showLoadingIndicator = false)
             } catch (e: retrofit2.HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
                 android.util.Log.e("WeeklyTasksFragment", "Error HTTP ${e.code()}: $errorBody")
-                Toast.makeText(
-                    requireContext(),
-                    "Error HTTP ${e.code()}: ${errorBody ?: e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                BubbleToast.show(requireActivity(), "Error HTTP ${e.code()}: ${errorBody ?: e.message}", 3000)
             } catch (e: Exception) {
                 android.util.Log.e("WeeklyTasksFragment", "Error al eliminar: ${e.message}", e)
-                Toast.makeText(requireContext(), "Error al eliminar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+                BubbleToast.show(requireActivity(), "Error al eliminar tarea: ${e.message}", 3000)
             }
         }
     }
 
     private fun markTaskAsCompleted(task: Task) {
         if (task.id == null) {
-            Toast.makeText(requireContext(), "Error: ID de tarea no válido", Toast.LENGTH_SHORT).show()
+            BubbleToast.show(requireActivity(), "Error: ID de tarea no válido")
             return
         }
 
+        // Alternar el estado de completado
+        val newStatus = !task.isCompleted
+        val updatedTask = task.copy(isCompleted = newStatus)
+        
+        // Actualizar UI inmediatamente sin parpadeo
+        updateTaskInList(updatedTask)
+        
+        if (newStatus) {
+            celebrate()
+            BubbleToast.show(requireActivity(), "¡Tarea '${task.title}' completada!")
+        } else {
+            BubbleToast.show(requireActivity(), "Tarea '${task.title}' marcada como pendiente")
+        }
+
+        // Actualizar en el servidor en background
         lifecycleScope.launch {
             try {
-                // Alternar el estado de completado
-                val newStatus = !task.isCompleted
                 taskRepository.updateTaskCompletionStatus(task.id, newStatus)
-                
-                if (newStatus) {
-                    celebrate()
-                    Toast.makeText(requireContext(), "¡Tarea '${task.title}' completada!", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "Tarea '${task.title}' marcada como pendiente", Toast.LENGTH_SHORT).show()
-                }
-                
-                // Recargar tareas para reflejar el cambio
-                loadWeeklyTasks()
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error al actualizar tarea: ${e.message}", Toast.LENGTH_LONG).show()
+                BubbleToast.show(requireActivity(), "Error al actualizar tarea: ${e.message}", 3000)
                 // Recargar para restaurar el estado correcto
                 loadWeeklyTasks()
             }
         }
     }
+    
+    private fun updateTaskInList(updatedTask: Task) {
+        val currentItems = taskAdapter.itemsList.toMutableList()
+        val tasks = currentItems.filterIsInstance<TaskAdapter.TaskItem.TaskData>().map { it.task }.toMutableList()
+        
+        // Encontrar y actualizar la tarea
+        val index = tasks.indexOfFirst { it.id == updatedTask.id }
+        if (index != -1) {
+            tasks[index] = updatedTask
+        }
+        
+        // Reorganizar: pendientes primero, completadas después
+        val pendingTasks = tasks.filter { !it.isCompleted }
+        val completedTasks = tasks.filter { it.isCompleted }
+        
+        val newItems = mutableListOf<TaskAdapter.TaskItem>()
+        pendingTasks.forEach { task ->
+            newItems.add(TaskAdapter.TaskItem.TaskData(task))
+        }
+        
+        if (completedTasks.isNotEmpty()) {
+            newItems.add(TaskAdapter.TaskItem.Header("✅ Tareas Completadas"))
+            completedTasks.forEach { task ->
+                newItems.add(TaskAdapter.TaskItem.TaskData(task))
+            }
+        }
+        
+        taskAdapter.updateItems(newItems)
+    }
 
     private fun loadWeeklyTasks(showLoadingIndicator: Boolean = true) {
         if (userId == null) {
-            Toast.makeText(requireContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show()
+            BubbleToast.show(requireActivity(), "Error: sesión no válida")
             return
         }
 
@@ -173,7 +200,7 @@ class WeeklyTasksFragment : Fragment() {
                 
                 taskAdapter.updateItems(items)
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error al cargar tareas: ${e.message}", Toast.LENGTH_LONG).show()
+                BubbleToast.show(requireActivity(), "Error al cargar tareas: ${e.message}", 3000)
             } finally {
                 if (showLoadingIndicator) {
                     showLoading(false)
