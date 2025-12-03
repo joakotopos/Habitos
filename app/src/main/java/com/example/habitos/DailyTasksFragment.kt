@@ -163,7 +163,7 @@ class DailyTasksFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Limpiar la referencia al binding para evitar memory leaks
+        _binding = null
     }
 
 }
