@@ -65,17 +65,6 @@
 
 ---
 
-## 📥 Instalación
-
-### Para Usuarios
-
-1. **Descarga el APK** desde [Releases](https://github.com/joakotopos/Habitos/releases)
-2. **Habilita instalación de fuentes desconocidas**:
-   ```
-   Configuración → Seguridad → Instalar apps desconocidas → Habilitar
-   ```
-3. **Instala el APK** descargado
-4. **Abre la app** y comienza a crear tus hábitos
 
 ### Para Desarrolladores
 
